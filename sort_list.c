@@ -10,7 +10,7 @@
 #include <limits.h>
 
 #define MAX_THREADS     65536
-#define MAX_LIST_SIZE   100000000
+#define MAX_LIST_SIZE   500000000
 
 #define DEBUG 0
 
