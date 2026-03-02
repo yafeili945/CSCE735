@@ -43,11 +43,7 @@ class Matrix {
 
 	static void matrix_error(int); 
 
-	Matrix(int,int);
-	Matrix(const Matrix&);
-	Matrix(Matrix&&) noexcept;
-	Matrix& operator=(const Matrix&);
-	Matrix& operator=(Matrix&&) noexcept;
+	Matrix(int,int); 
 	~Matrix(); 
 
     private:
@@ -63,103 +59,74 @@ Matrix Matrix::strassens_product(Matrix& A, Matrix& B) {
     int n = A.nrows;
     if (A.nrows != A.ncols) Matrix::matrix_error(500); 
     if (B.nrows != B.ncols) Matrix::matrix_error(501); 
-    if (A.ncols != B.nrows) Matrix::matrix_error(502);
+    if (A.ncols != B.nrows) Matrix::matrix_error(502); // Matrix not square
 
-    // Use standard multiplication for small matrices
     if (n <= leaf_matrix_size) {
-        Matrix C = Matrix::standard_product(A, B);
+
+	Matrix C = Matrix::standard_product(A, B); 
+	return C;
+
+    } else {
+
+	// Extract blocks of A: A11, A12, A21, A22
+        Matrix A11 = A.extract_submatrix(0, n/2-1, 0, n/2-1);
+        Matrix A12 = A.extract_submatrix(0, n/2-1, n/2, n-1);
+        Matrix A21 = A.extract_submatrix(n/2, n-1, 0, n/2-1);
+        Matrix A22 = A.extract_submatrix(n/2, n-1, n/2, n-1);
+
+	// Extract blocks of B: B11, B12, B21, B22
+        Matrix B11 = B.extract_submatrix(0, n/2-1, 0, n/2-1);
+        Matrix B12 = B.extract_submatrix(0, n/2-1, n/2, n-1);
+        Matrix B21 = B.extract_submatrix(n/2, n-1, 0, n/2-1);
+        Matrix B22 = B.extract_submatrix(n/2, n-1, n/2, n-1);
+
+	// Compute products M1, M2, ..., M7
+		Matrix M1a = Matrix::addition(A11,A22); 
+		Matrix M1b = Matrix::addition(B11,B22);
+        Matrix M1 = Matrix::strassens_product(M1a, M1b); 
+
+		Matrix M2a = Matrix::addition(A21,A22);
+        Matrix M2 = Matrix::strassens_product(M2a, B11); 
+
+		Matrix M3b = Matrix::subtraction(B12,B22);
+        Matrix M3 = Matrix::strassens_product(A11, M3b); 
+
+		Matrix M4b = Matrix::subtraction(B21,B11);
+        Matrix M4 = Matrix::strassens_product( A22, M4b); 
+
+		Matrix M5a = Matrix::addition(A11,A12); 
+        Matrix M5 = Matrix::strassens_product(M5a, B22);
+
+		Matrix M6a = Matrix::subtraction(A21,A11); 
+		Matrix M6b = Matrix::addition(B11,B12);
+        Matrix M6 = Matrix::strassens_product(M6a, M6b);
+
+		Matrix M7a = Matrix::subtraction(A12,A22); 
+		Matrix M7b = Matrix::addition(B21,B22);
+        Matrix M7 = Matrix::strassens_product(M7a, M7b);
+
+	// Compute blocks of C: C11, C12, C21, C22
+	Matrix C11a = Matrix::addition(M1,M4);
+	Matrix C11b = Matrix::subtraction(M7,M5);
+        Matrix C11 = Matrix::addition(C11a, C11b);
+
+        Matrix C12 = Matrix::addition(M3,M5);
+        Matrix C21 = Matrix::addition(M2,M4);
+
+	Matrix C22a = Matrix::subtraction(M1,M2);
+	Matrix C22b = Matrix::addition(M3,M6);
+        Matrix C22 = Matrix::addition(C22a, C22b);
+
+	// Create the product matrix C
+	Matrix C(n,n); 
+        C.update_submatrix(C11, 0, n/2-1, 0, n/2-1);
+        C.update_submatrix(C12, 0, n/2-1, n/2, n-1);
+        C.update_submatrix(C21, n/2, n-1, 0, n/2-1);
+        C.update_submatrix(C22, n/2, n-1, n/2, n-1);
+
         return C;
     }
 
-    Matrix A11 = A.extract_submatrix(0, n/2-1, 0, n/2-1);
-    Matrix A12 = A.extract_submatrix(0, n/2-1, n/2, n-1);
-    Matrix A21 = A.extract_submatrix(n/2, n-1, 0, n/2-1);
-    Matrix A22 = A.extract_submatrix(n/2, n-1, n/2, n-1);
-
-    Matrix B11 = B.extract_submatrix(0, n/2-1, 0, n/2-1);
-    Matrix B12 = B.extract_submatrix(0, n/2-1, n/2, n-1);
-    Matrix B21 = B.extract_submatrix(n/2, n-1, 0, n/2-1);
-    Matrix B22 = B.extract_submatrix(n/2, n-1, n/2, n-1);
-
-    // Prepare the input for the matrices M1..M7
-    Matrix M1a = Matrix::addition(A11,A22); 
-    Matrix M1b = Matrix::addition(B11,B22);
-
-    Matrix M2a = Matrix::addition(A21,A22);
-
-    Matrix M3b = Matrix::subtraction(B12,B22);
-
-    Matrix M4b = Matrix::subtraction(B21,B11);
-
-    Matrix M5a = Matrix::addition(A11,A12);
-
-    Matrix M6a = Matrix::subtraction(A21,A11); 
-    Matrix M6b = Matrix::addition(B11,B12);
-
-    Matrix M7a = Matrix::subtraction(A12,A22); 
-    Matrix M7b = Matrix::addition(B21,B22);
-
-    Matrix M1(n/2,n/2), M2(n/2,n/2), M3(n/2,n/2), M4(n/2,n/2),
-           M5(n/2,n/2), M6(n/2,n/2), M7(n/2,n/2);
-
-    const int TASK_CUTOFF = leaf_matrix_size * 4;
-    const bool do_task = (n > TASK_CUTOFF);
-
-    if (do_task) {
-        #pragma omp task shared(M1)
-        { M1 = Matrix::strassens_product(M1a, M1b); }
-
-        #pragma omp task shared(M2)
-        { M2 = Matrix::strassens_product(M2a, B11); }
-
-        #pragma omp task shared(M3)
-        { M3 = Matrix::strassens_product(A11, M3b); }
-
-        #pragma omp task shared(M4)
-        { M4 = Matrix::strassens_product(A22, M4b); }
-
-        #pragma omp task shared(M5)
-        { M5 = Matrix::strassens_product(M5a, B22); }
-
-        #pragma omp task shared(M6)
-        { M6 = Matrix::strassens_product(M6a, M6b); }
-
-        #pragma omp task shared(M7)
-        { M7 = Matrix::strassens_product(M7a, M7b); }
-
-        // Wait for all tasks to complete
-        #pragma omp taskwait
-    } else {
-        // Small scale: serial recursion, avoid task overhead
-        M1 = Matrix::strassens_product(M1a, M1b);
-        M2 = Matrix::strassens_product(M2a, B11);
-        M3 = Matrix::strassens_product(A11, M3b);
-        M4 = Matrix::strassens_product(A22, M4b);
-        M5 = Matrix::strassens_product(M5a, B22);
-        M6 = Matrix::strassens_product(M6a, M6b);
-        M7 = Matrix::strassens_product(M7a, M7b);
-    }
-
-    // Combine the four blocks of C
-    Matrix C11a = Matrix::addition(M1,M4);
-    Matrix C11b = Matrix::subtraction(M7,M5);
-    Matrix C11  = Matrix::addition(C11a, C11b);
-
-    Matrix C12 = Matrix::addition(M3,M5);
-    Matrix C21 = Matrix::addition(M2,M4);
-
-    Matrix C22a = Matrix::subtraction(M1,M2);
-    Matrix C22b = Matrix::addition(M3,M6);
-    Matrix C22  = Matrix::addition(C22a, C22b);
-
-    // Concatenate the four blocks of C
-    Matrix C(n,n);
-    C.update_submatrix(C11, 0, n/2-1, 0, n/2-1);
-    C.update_submatrix(C12, 0, n/2-1, n/2, n-1);
-    C.update_submatrix(C21, n/2, n-1, 0, n/2-1);
-    C.update_submatrix(C22, n/2, n-1, n/2, n-1);
-
-    return C;
 }
  
 // Standard matrix product
@@ -283,62 +250,12 @@ Matrix::Matrix(int num_rows, int num_cols) {
     for (int i = 0; i < nrows; i++) elements[i] = &(array[i*ncols]);
 }
 
-// Copy constructor - deep copy
-Matrix::Matrix(const Matrix& other) {
-    nrows = other.nrows;
-    ncols = other.ncols;
-    elements = new double *[nrows];
-    array = new double[nrows*ncols];
-    for (int i = 0; i < nrows; i++) elements[i] = &(array[i*ncols]);
-    for (int i = 0; i < nrows * ncols; i++) array[i] = other.array[i];
-}
-
-// Move constructor - transfer ownership
-Matrix::Matrix(Matrix&& other) noexcept {
-    nrows = other.nrows;
-    ncols = other.ncols;
-    elements = other.elements;
-    array = other.array;
-    other.nrows = 0;
-    other.ncols = 0;
-    other.elements = nullptr;
-    other.array = nullptr;
-}
-
-// Copy assignment - deep copy
-Matrix& Matrix::operator=(const Matrix& other) {
-    if (this == &other) return *this;
-    delete [] elements;
-    delete [] array;
-    nrows = other.nrows;
-    ncols = other.ncols;
-    elements = new double *[nrows];
-    array = new double[nrows*ncols];
-    for (int i = 0; i < nrows; i++) elements[i] = &(array[i*ncols]);
-    for (int i = 0; i < nrows * ncols; i++) array[i] = other.array[i];
-    return *this;
-}
-
-// Move assignment - transfer ownership
-Matrix& Matrix::operator=(Matrix&& other) noexcept {
-    if (this == &other) return *this;
-    delete [] elements;
-    delete [] array;
-    nrows = other.nrows;
-    ncols = other.ncols;
-    elements = other.elements;
-    array = other.array;
-    other.nrows = 0;
-    other.ncols = 0;
-    other.elements = nullptr;
-    other.array = nullptr;
-    return *this;
-}
-
 // Destroy matrix - free dynamically allocated memory
 Matrix::~Matrix(){
-    delete [] elements; 
-    delete [] array; 
+	delete [] elements; 
+	delete [] array; 
+//	if (elements != nullptr) { delete [] elements; elements = nullptr; }
+//	if (array != nullptr) { delete [] array; array = nullptr; }
 }
 
 // =======================================================================
@@ -372,14 +289,7 @@ int main(int argc, char *argv[]) {
     // ----------------------------------
     // Strassen's matrix multiplication
     start = omp_get_wtime();
-    Matrix C(1,1);
-    #pragma omp parallel
-    {
-        #pragma omp single
-        {
-            C = Matrix::strassens_product(A,B); 
-        }
-    } 
+    Matrix C = Matrix::strassens_product(A,B); 
     strassens_time = omp_get_wtime() - start;
 
     printf("Matrix size = %d, Leaf matrix size = %d, Strassen's (s) = %8.4f s,",
