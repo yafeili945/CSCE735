@@ -2,17 +2,17 @@
 #SBATCH --export=NONE
 #SBATCH --get-user-env=L
 #SBATCH --job-name=strassen
+#SBATCH --time=0:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=64
-#SBATCH --time=0:30:00
+#SBATCH --cpus-per-task=48
 #SBATCH --mem=16G
 #SBATCH --output=output.%j
-#SBATCH --exclusive
 
 module load intel
 
-export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
+# Grace 普通节点 48 核；OpenMP 单进程多线程
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-48}
 export OMP_PROC_BIND=true
 export OMP_PLACES=cores
 
