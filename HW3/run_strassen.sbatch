@@ -1,10 +1,14 @@
 #!/bin/bash
-#SBATCH -J strassen
-#SBATCH -N 1
-#SBATCH -n 1
-#SBATCH -c 64
-#SBATCH -t 00:30:00
-#SBATCH -p compute
+#SBATCH --export=NONE
+#SBATCH --get-user-env=L
+#SBATCH --job-name=strassen
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=64
+#SBATCH --time=0:30:00
+#SBATCH --partition=compute
+#SBATCH --mem=16G
+#SBATCH --output=output.%j
 #SBATCH --exclusive
 
 module load intel
