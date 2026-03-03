@@ -43,7 +43,11 @@ class Matrix {
 
 	static void matrix_error(int); 
 
-	Matrix(int,int); 
+	Matrix(int,int);
+	Matrix(const Matrix&);
+	Matrix(Matrix&&) noexcept;
+	Matrix& operator=(const Matrix&);
+	Matrix& operator=(Matrix&&) noexcept;
 	~Matrix(); 
 
     private:
@@ -279,12 +283,62 @@ Matrix::Matrix(int num_rows, int num_cols) {
     for (int i = 0; i < nrows; i++) elements[i] = &(array[i*ncols]);
 }
 
+// Copy constructor - deep copy
+Matrix::Matrix(const Matrix& other) {
+    nrows = other.nrows;
+    ncols = other.ncols;
+    elements = new double *[nrows];
+    array = new double[nrows*ncols];
+    for (int i = 0; i < nrows; i++) elements[i] = &(array[i*ncols]);
+    for (int i = 0; i < nrows * ncols; i++) array[i] = other.array[i];
+}
+
+// Move constructor - transfer ownership
+Matrix::Matrix(Matrix&& other) noexcept {
+    nrows = other.nrows;
+    ncols = other.ncols;
+    elements = other.elements;
+    array = other.array;
+    other.nrows = 0;
+    other.ncols = 0;
+    other.elements = nullptr;
+    other.array = nullptr;
+}
+
+// Copy assignment - deep copy
+Matrix& Matrix::operator=(const Matrix& other) {
+    if (this == &other) return *this;
+    delete [] elements;
+    delete [] array;
+    nrows = other.nrows;
+    ncols = other.ncols;
+    elements = new double *[nrows];
+    array = new double[nrows*ncols];
+    for (int i = 0; i < nrows; i++) elements[i] = &(array[i*ncols]);
+    for (int i = 0; i < nrows * ncols; i++) array[i] = other.array[i];
+    return *this;
+}
+
+// Move assignment - transfer ownership
+Matrix& Matrix::operator=(Matrix&& other) noexcept {
+    if (this == &other) return *this;
+    delete [] elements;
+    delete [] array;
+    nrows = other.nrows;
+    ncols = other.ncols;
+    elements = other.elements;
+    array = other.array;
+    other.nrows = 0;
+    other.ncols = 0;
+    other.elements = nullptr;
+    other.array = nullptr;
+    return *this;
+}
+
 // Destroy matrix - free dynamically allocated memory
 Matrix::~Matrix(){
-	delete [] elements; 
-	delete [] array; 
-//	if (elements != nullptr) { delete [] elements; elements = nullptr; }
-//	if (array != nullptr) { delete [] array; array = nullptr; }
+    delete [] elements; 
+    delete [] array; 
 }
 
 // =======================================================================
