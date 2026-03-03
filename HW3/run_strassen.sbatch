@@ -1,4 +1,3 @@
-cat > run_strassen.sbatch << 'EOF'
 #!/bin/bash
 #SBATCH -J strassen
 #SBATCH -N 1
@@ -21,4 +20,3 @@ for k in 10 11 12 13 14; do
     ./strassen_omp.exe $k $q
   done
 done
-EOF
