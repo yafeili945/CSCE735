@@ -1,0 +1,61 @@
+k=10 q=4 threads=48
+Matrix size = 1024, Leaf matrix size = 16, Strassen's (s) =   0.2351 s, Standard =   3.4285 s, Error = 0
+k=10 q=5 threads=48
+Matrix size = 1024, Leaf matrix size = 32, Strassen's (s) =   0.6168 s, Standard =   3.7326 s, Error = 0
+k=10 q=6 threads=48
+Matrix size = 1024, Leaf matrix size = 64, Strassen's (s) =   0.9242 s, Standard =   3.9825 s, Error = 0
+k=10 q=7 threads=48
+Matrix size = 1024, Leaf matrix size = 128, Strassen's (s) =   0.2091 s, Standard =   3.3087 s, Error = 0
+k=10 q=8 threads=48
+Matrix size = 1024, Leaf matrix size = 256, Strassen's (s) =   1.2310 s, Standard =   3.3571 s, Error = 0
+k=10 q=9 threads=48
+Matrix size = 1024, Leaf matrix size = 512, Strassen's (s) =   3.2691 s, Standard =   3.3504 s, Error = 0
+k=11 q=4 threads=48
+Matrix size = 2048, Leaf matrix size = 16, Strassen's (s) =   0.8248 s, Standard = not computed for large matrices 
+k=11 q=5 threads=48
+Matrix size = 2048, Leaf matrix size = 32, Strassen's (s) =   1.3290 s, Standard = not computed for large matrices 
+k=11 q=6 threads=48
+Matrix size = 2048, Leaf matrix size = 64, Strassen's (s) =   0.8051 s, Standard = not computed for large matrices 
+k=11 q=7 threads=48
+Matrix size = 2048, Leaf matrix size = 128, Strassen's (s) =   1.3460 s, Standard = not computed for large matrices 
+k=11 q=8 threads=48
+Matrix size = 2048, Leaf matrix size = 256, Strassen's (s) =   1.5705 s, Standard = not computed for large matrices 
+k=11 q=9 threads=48
+Matrix size = 2048, Leaf matrix size = 512, Strassen's (s) =  19.7764 s, Standard = not computed for large matrices 
+k=12 q=4 threads=48
+Matrix size = 4096, Leaf matrix size = 16, Strassen's (s) =   2.8395 s, Standard = not computed for large matrices 
+k=12 q=5 threads=48
+Matrix size = 4096, Leaf matrix size = 32, Strassen's (s) =   1.9187 s, Standard = not computed for large matrices 
+k=12 q=6 threads=48
+Matrix size = 4096, Leaf matrix size = 64, Strassen's (s) =   1.9929 s, Standard = not computed for large matrices 
+k=12 q=7 threads=48
+Matrix size = 4096, Leaf matrix size = 128, Strassen's (s) =   2.1529 s, Standard = not computed for large matrices 
+k=12 q=8 threads=48
+Matrix size = 4096, Leaf matrix size = 256, Strassen's (s) =   3.2684 s, Standard = not computed for large matrices 
+k=12 q=9 threads=48
+Matrix size = 4096, Leaf matrix size = 512, Strassen's (s) =  21.5263 s, Standard = not computed for large matrices 
+k=13 q=4 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446472 Killed                  ./strassen_omp.exe $k $q
+k=13 q=5 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446535 Killed                  ./strassen_omp.exe $k $q
+k=13 q=6 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446583 Killed                  ./strassen_omp.exe $k $q
+k=13 q=7 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446633 Killed                  ./strassen_omp.exe $k $q
+k=13 q=8 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446700 Killed                  ./strassen_omp.exe $k $q
+k=13 q=9 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446748 Killed                  ./strassen_omp.exe $k $q
+k=14 q=4 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446798 Killed                  ./strassen_omp.exe $k $q
+k=14 q=5 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446849 Killed                  ./strassen_omp.exe $k $q
+k=14 q=6 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446912 Killed                  ./strassen_omp.exe $k $q
+k=14 q=7 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 446962 Killed                  ./strassen_omp.exe $k $q
+k=14 q=8 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 447012 Killed                  ./strassen_omp.exe $k $q
+k=14 q=9 threads=48
+/var/spool/slurmd/job17939943/slurm_script: line 21: 447073 Killed                  ./strassen_omp.exe $k $q
+slurmstepd: error: Detected 12 oom_kill events in StepId=17939943.batch. Some of the step tasks have been OOM Killed.
