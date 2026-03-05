@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH --export=NONE
-#SBATCH --job-name=strassen_resume
+#SBATCH --job-name=strassen_t1_resume
 #SBATCH --time=4:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=48
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH --output=output.%j
 
 module load intel

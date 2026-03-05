@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=48
-#SBATCH --mem=64G
+#SBATCH --mem=128G
 #SBATCH --output=output.%j
 
 module load intel
