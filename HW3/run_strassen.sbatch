@@ -1,6 +1,5 @@
 #!/bin/bash
 #SBATCH --export=NONE
-#SBATCH --get-user-env=L
 #SBATCH --job-name=strassen
 #SBATCH --time=0:30:00
 #SBATCH --nodes=1
