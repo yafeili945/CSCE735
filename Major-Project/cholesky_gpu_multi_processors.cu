@@ -64,6 +64,48 @@ __global__ void device_cholesky_factorization(Matrix A) {
         }
     }
 }
+// Normalize row k of matrix A on the device
+// - divides entries A[k][j] by sqrt_pivot for j = k, ..., n-1
+// - each thread handles one column index j in row k
+// - this corresponds to the row normalization step in Cholesky factorization
+__global__ void normalize_row_kernel(Matrix A, int k, double sqrt_pivot) {
+    int offset = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = k + offset;
+
+    if (j < A.n) {
+        A.elements[k][j] = A.elements[k][j] / sqrt_pivot;
+    }
+}
+
+// Zero out entries below the diagonal in column k
+// - sets A[j][k] = 0.0 for j = k+1, ..., n-1
+// - each thread handles one row index j in column k
+// - this maintains the upper triangular form of the factor R
+__global__ void zero_below_diagonal_kernel(Matrix A, int k) {
+    int offset = blockIdx.x * blockDim.x + threadIdx.x;
+    int j = k + 1 + offset;
+
+    if (j < A.n) {
+        A.elements[j][k] = 0;
+    }
+}
+// Update the trailing submatrix after row k has been normalized
+// - updates entries A[i][j] for i,j = k+1, ..., n-1 using
+//     A[i][j] = A[i][j] - A[k][j] * A[k][i]
+// - each thread handles one entry (i,j) in the trailing submatrix
+// - this is the main computational step in Cholesky factorization
+__global__ void update_trailing_kernel(Matrix A, int k) {
+
+    int colOffset = blockIdx.x * blockDim.x + threadIdx.x;
+    int rowOffset = blockIdx.y * blockDim.y + threadIdx.y;
+
+    int i = k + 1 + rowOffset;
+    int j = k + 1 + colOffset;
+
+    if (i < A.n && j < A.n) {
+        A.elements[i][j] -= A.elements[k][j] * A.elements[k][i];
+    }
+}
 
 // Host routines ..............................................................
 
@@ -296,7 +338,28 @@ int main(int argc, char *argv[]) {
     // Compute Cholesky factor on device
     cudaEventRecord( start, 0 );
     
-    device_cholesky_factorization<<<1,1>>>(dA);
+    double sqrt_pivot;
+    Matrix R = clone_matrix(dA);
+    for (int k = 0; k < R.n; k++) {
+        sqrt_pivot = sqrt(R.elements[k][k]);
+        //
+        int work1 = dA.n - k;
+        int blockSize1 = 256;
+        int gridSize1 = (work1 + blockSize1 - 1) / blockSize1;
+        normalize_row_kernel<<<gridSize1, blockSize1>>>(dA, k, sqrt_pivot);
+        //
+        int size = dA.n - (k + 1);
+
+        dim3 block2(16, 16);
+        dim3 grid2((size + block2.x - 1) / block2.x, (size + block2.y - 1) / block2.y);
+        update_trailing_kernel<<<grid2, block2>>>(dA, k);
+        //
+        int work3 = dA.n - k;
+        int blockSize3 = 256;
+        int gridSize3 = (work3 + blockSize3 - 1) / blockSize3;
+        update_trailing_kernel<<gridSize3, blockSize3>>(dA, k);
+    }
+
     err = cudaGetLastError(); check_error(err, ERR_KERNEL);
 
     cudaEventRecord(stop, 0);
