@@ -338,26 +338,44 @@ int main(int argc, char *argv[]) {
     // Compute Cholesky factor on device
     cudaEventRecord( start, 0 );
     
-    double sqrt_pivot;
-    Matrix R = clone_matrix(dA);
-    for (int k = 0; k < R.n; k++) {
-        sqrt_pivot = sqrt(R.elements[k][k]);
-        //
+    for (int k = 0; k < dA.n; k++) {
+
+        // Get pivot A[k][k] from device and compute its square root on host
+        double pivot_val;
+        err = cudaMemcpy(&pivot_val,
+                         dA.array + k * dA.n + k,
+                         sizeof(double),
+                         cudaMemcpyDeviceToHost);
+        check_error(err, ERR_MEMCPY);
+    
+        double sqrt_pivot = sqrt(pivot_val);
+    
+        // 1) Normalize row k: A[k][j] /= sqrt_pivot, j = k ... n-1
         int work1 = dA.n - k;
         int blockSize1 = 256;
         int gridSize1 = (work1 + blockSize1 - 1) / blockSize1;
         normalize_row_kernel<<<gridSize1, blockSize1>>>(dA, k, sqrt_pivot);
-        //
+        err = cudaGetLastError(); check_error(err, ERR_KERNEL);
+        err = cudaDeviceSynchronize(); check_error(err, ERR_KERNEL);
+    
+        // 2) Update trailing submatrix and 3) zero below diagonal
         int size = dA.n - (k + 1);
-
-        dim3 block2(16, 16);
-        dim3 grid2((size + block2.x - 1) / block2.x, (size + block2.y - 1) / block2.y);
-        update_trailing_kernel<<<grid2, block2>>>(dA, k);
-        //
-        int work3 = dA.n - k;
-        int blockSize3 = 256;
-        int gridSize3 = (work3 + blockSize3 - 1) / blockSize3;
-        update_trailing_kernel<<gridSize3, blockSize3>>(dA, k);
+        if (size > 0) {
+            dim3 block2(16, 16);
+            dim3 grid2((size + block2.x - 1) / block2.x,
+                       (size + block2.y - 1) / block2.y);
+    
+            update_trailing_kernel<<<grid2, block2>>>(dA, k);
+            err = cudaGetLastError(); check_error(err, ERR_KERNEL);
+            err = cudaDeviceSynchronize(); check_error(err, ERR_KERNEL);
+    
+            int work3 = dA.n - (k + 1);
+            int blockSize3 = 256;
+            int gridSize3 = (work3 + blockSize3 - 1) / blockSize3;
+            zero_below_diagonal_kernel<<<gridSize3, blockSize3>>>(dA, k);
+            err = cudaGetLastError(); check_error(err, ERR_KERNEL);
+            err = cudaDeviceSynchronize(); check_error(err, ERR_KERNEL);
+        }
     }
 
     err = cudaGetLastError(); check_error(err, ERR_KERNEL);
