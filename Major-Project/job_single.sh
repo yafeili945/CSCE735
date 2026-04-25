@@ -10,13 +10,13 @@
 #SBATCH --mem=16G
 #SBATCH --time=12:00:00
 
-# 1. 环境加载
+# 1. Load environment
 module load intel CUDA
 
-# 2. 权限设置
+# 2. Set executable permissions
 chmod +x original.exe parallel_8.exe parallel_16.exe parallel_32.exe
 
-# 4. 实验：原版对比测试 (512 - 2048)
+# 4. Experiment: baseline original-version comparison (512 - 2048)
 echo ""
 echo "=========================================================="
 echo "EXPERIMENT: Original Version (Single Thread reference)"

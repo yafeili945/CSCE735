@@ -10,14 +10,14 @@
 #SBATCH --mem=16G
 #SBATCH --time=03:00:00
 
-# 1. 环境加载
+# 1. Load environment
 module load intel CUDA
 
-# 2. 权限设置
+# 2. Set executable permissions
 chmod +x original.exe parallel_8.exe parallel_16.exe parallel_32.exe
 
-# 3. 实验：并行版全量对比 (512 - 4096)
-# 这样你就能画出三条曲线：8x8, 16x16, 32x32，看谁在什么规模下最强
+# 3. Experiment: full comparison of parallel versions (512 - 4096)
+# This allows plotting three curves (8x8, 16x16, 32x32) to compare performance by matrix size
 for size in 512 1024 2048 4096
 do
     echo "=========================================================="
@@ -35,7 +35,7 @@ do
     echo "----------------------------------------------------------"
 done
 
-# 4. 实验：原版对比测试 (512 - 2048)
+# 4. Experiment: baseline original-version comparison (512 - 2048)
 echo ""
 echo "=========================================================="
 echo "EXPERIMENT: Original Version (Single Thread reference)"
